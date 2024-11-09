@@ -1,7 +1,5 @@
 'use server'
 
-import { nanoid } from 'nanoid'
-
 // In a real application, this would be a database
 const urlMap = new Map<string, string>()
 

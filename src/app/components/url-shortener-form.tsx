@@ -15,7 +15,7 @@ export function UrlShortenerForm() {
   async function handleSubmit(formData: FormData) {
     const result = await shortenUrl(formData)
     if ('error' in result) {
-      setError(result.error)
+      setError(result.error ?? 'An unknown error occurred')
       setShortUrl(null)
     } else {
       setShortUrl(result.shortUrl)
