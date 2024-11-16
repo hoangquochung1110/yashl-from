@@ -1,5 +1,7 @@
-import Link from 'next/link'
+'use client';
 
+import Link from 'next/link';
+import ProtectedRoute from '../components/ProtectedRoute';
 interface UrlEntry {
   shortUrl: string;
   destinationUrl: string;
@@ -42,7 +44,8 @@ const mockUrls: UrlEntry[] = [
 
 export default function ManageUrls() {
   return (
-    <main className="min-h-screen bg-gray-100 p-8">
+    <ProtectedRoute>
+         <main className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Manage Shortened URLs</h1>
@@ -95,5 +98,6 @@ export default function ManageUrls() {
         </div>
       </div>
     </main>
-  )
+    </ProtectedRoute>
+  );
 } 
