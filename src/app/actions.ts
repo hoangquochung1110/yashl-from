@@ -5,7 +5,7 @@ const urlMap = new Map<string, string>()
 
 export async function shortenUrl(formData: FormData) {
   const url = formData.get('url') as string
-  
+  const uid = formData.get('uid') as string
   if (!url) {
     return { error: 'URL is required' }
   }
@@ -16,22 +16,38 @@ export async function shortenUrl(formData: FormData) {
     return { error: 'Invalid URL' }
   }
 
-  const response = await fetch('https://3zrw4n9tgb.execute-api.ap-southeast-1.amazonaws.com/Dev/api', {
+  const apiUrl = process.env.NEXT_PUBLIC_SHORTENER_API_URL;
+  if (!apiUrl) {
+    return { error: 'SHORTENER_API_URL environment variable is not set' };
+  }
+
+  const response = await fetch(apiUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      destination_url: url
+      destination_url: url,
+      user_id: uid,
     }),
   })
-
-  const data = await response.json()
-  const shortKey= JSON.parse(data.body) // Take the key from the response body
-  // In a real application, we would check if the key already exists in the database
-  // and generate a new one if it does
-  urlMap.set(shortKey, url)
-
-  const shortUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${shortKey}`
-  return { shortUrl }
+  
+  if (!response.ok) {
+    // Handle error based on status code
+    if (response.status === 404) {
+      return { error: 'API endpoint not found' }
+    } else if (response.status === 500) {
+      return { error: 'Internal server error' }
+    } else {
+      return { error: 'Failed to shorten URL' }
+    }
+  } else {
+      const { body } = await response.json();
+      const shortKey = JSON.parse(body).key;
+      urlMap.set(shortKey, url);
+      const shortUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/${shortKey}`
+      return { shortUrl }
+  }
 }
+
+
