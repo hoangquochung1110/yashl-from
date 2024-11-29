@@ -33,16 +33,19 @@ export default function Home() {
       >
         Manage URLs
       </Link>
-      {user ? (
-        <p>Welcome, User ID: {user.uid}</p>
-      ) : (
-        <Link 
-        href="/login" 
-        className="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-800"
-      >
-        Login
-      </Link>
-      )}
+      <div className="absolute top-0 right-0 p-4">
+        {user ? ( 
+          <p>Hi {user.displayName}</p>
+        ) : (
+          <Link
+            href="/login"
+            className="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-800"
+          >
+            Login
+          </Link>
+        )}
+      </div>
+
     </main>
   )
 }
