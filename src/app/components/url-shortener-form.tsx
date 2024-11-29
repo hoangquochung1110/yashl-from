@@ -1,18 +1,37 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import { shortenUrl } from '../actions'
 import { ShortenedUrlDisplay } from './shortened-url-display'
+import { auth } from '../lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+
 
 export function UrlShortenerForm() {
   const [shortUrl, setShortUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+        console.log("User is signed in:", user.uid);
+      } else {
+        setUser(null);
+        console.log("User is signed out");
+      }
+    });
+
+    return () => unsubscribe(); // Cleanup subscription on unmount
+  }, []);
 
   async function handleSubmit(formData: FormData) {
+    formData.append('uid', user?.uid as string)
     const result = await shortenUrl(formData)
     if ('error' in result) {
       setError(result.error ?? 'An unknown error occurred')
