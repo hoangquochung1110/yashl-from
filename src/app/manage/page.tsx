@@ -9,40 +9,56 @@ interface UrlEntry {
 }
 
 // This is mock data - you'll want to replace this with actual data from your backend
-const mockUrls: UrlEntry[] = [
-  {
-    shortUrl: 'yt52k',
-    destinationUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    clickCount: 127
-  },
-  {
-    shortUrl: 'gh39x',
-    destinationUrl: 'https://github.com/features/actions',
-    clickCount: 43
-  },
-  {
-    shortUrl: 'nf20p',
-    destinationUrl: 'https://netflix.com/browse',
-    clickCount: 89
-  },
-  {
-    shortUrl: 'tw15m',
-    destinationUrl: 'https://twitter.com/elonmusk/status/1234567890',
-    clickCount: 256
-  },
-  {
-    shortUrl: 'docs7',
-    destinationUrl: 'https://docs.google.com/document/d/1234567890/edit',
-    clickCount: 15
-  },
-  {
-    shortUrl: 'blog2',
-    destinationUrl: 'https://medium.com/technology/how-to-build-a-url-shortener',
-    clickCount: 32
-  }
-]
+import { useEffect, useState } from 'react';
+import { auth } from '../lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+
 
 export default function ManageUrls() {
+  const [user, setUser] = useState(null);
+
+  const [urls, setUrls] = useState<UrlEntry[]>([]);
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+        console.log("User is signed in:", user.uid);
+      } else {
+        setUser(null);
+        console.log("User is signed out");
+      }
+    });
+
+    return () => unsubscribe(); // Cleanup subscription on unmount
+  }, []);
+
+  useEffect(() => {
+    const fetchUrls = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_KEY_LIST_API_URL}?user_id=${user?.uid}`)
+        if (response.ok) {
+          const data = await response.json();
+          console.log(data);
+          const urls: UrlEntry[] = data.map((item: { key_id: string, user_id: string, shorten_path: string, destination_url: string, click_count: string }) => ({
+            shortUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/${item.shorten_path}`,
+            // shortUrl: item.shorten_path,
+            destinationUrl: item.destination_url,
+            clickCount: parseInt(item.click_count, 10),
+          }));
+          setUrls(urls);
+        } else {
+          console.error('Error fetching URLs:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching URLs:', error);
+      }
+    };
+  
+    if (user?.uid) {
+      fetchUrls();
+    }
+  }, [user?.uid]);
+
   return (
     <ProtectedRoute>
          <main className="min-h-screen bg-gray-100 p-8">
@@ -73,7 +89,7 @@ export default function ManageUrls() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {mockUrls.map((url, index) => (
+              {urls.map((url, index) => (
                 <tr key={index}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <a 
