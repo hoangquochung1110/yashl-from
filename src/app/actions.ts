@@ -31,7 +31,6 @@ export async function shortenUrl(formData: FormData) {
       user_id: uid,
     }),
   })
-  
   if (!response.ok) {
     // Handle error based on status code
     if (response.status === 404) {
@@ -42,7 +41,8 @@ export async function shortenUrl(formData: FormData) {
       return { error: 'Failed to shorten URL' }
     }
   } else {
-      const { body } = await response.json();
+      const result = await response.json();
+      const body = result['body'];
       const shortKey = JSON.parse(body).key;
       urlMap.set(shortKey, url);
       const shortUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/${shortKey}`
