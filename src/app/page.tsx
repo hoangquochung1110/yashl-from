@@ -4,11 +4,11 @@ import { UrlShortenerForm } from './components/url-shortener-form'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react';
 import { auth } from './lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { User, onAuthStateChanged } from 'firebase/auth';
 
 
 export default function Home() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {

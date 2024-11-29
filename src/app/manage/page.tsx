@@ -11,11 +11,11 @@ interface UrlEntry {
 // This is mock data - you'll want to replace this with actual data from your backend
 import { useEffect, useState } from 'react';
 import { auth } from '../lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { User, onAuthStateChanged } from 'firebase/auth';
 
 
 export default function ManageUrls() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
 
   const [urls, setUrls] = useState<UrlEntry[]>([]);
   useEffect(() => {

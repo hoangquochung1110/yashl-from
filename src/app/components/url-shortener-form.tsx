@@ -8,13 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { shortenUrl } from '../actions'
 import { ShortenedUrlDisplay } from './shortened-url-display'
 import { auth } from '../lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { User, onAuthStateChanged } from 'firebase/auth';
 
 
 export function UrlShortenerForm() {
   const [shortUrl, setShortUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
