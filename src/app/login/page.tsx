@@ -10,7 +10,7 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
-      router.push('/manage');
+      router.back();
     }
   }, [user, router]);
 
