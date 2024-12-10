@@ -40,7 +40,7 @@ export default function ManageUrls() {
           const data = await response.json();
           console.log(data);
           const urls: UrlEntry[] = data.map((item: { key_id: string, user_id: string, shorten_path: string, destination_url: string, click_count: string }) => ({
-            shortUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/${item.shorten_path}`,
+            shortUrl: `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${item.shorten_path}`,
             // shortUrl: item.shorten_path,
             destinationUrl: item.destination_url,
             clickCount: parseInt(item.click_count, 10),

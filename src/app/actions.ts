@@ -45,9 +45,7 @@ export async function shortenUrl(formData: FormData) {
       const body = result['body'];
       const shortKey = JSON.parse(body).key;
       urlMap.set(shortKey, url);
-      const shortUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/${shortKey}`
+      const shortUrl = `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${shortKey}`
       return { shortUrl }
   }
 }
-
-
