@@ -41,7 +41,6 @@ export default function ManageUrls() {
           console.log(data);
           const urls: UrlEntry[] = data.map((item: { key_id: string, user_id: string, shorten_path: string, destination_url: string, click_count: string }) => ({
             shortUrl: `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${item.shorten_path}`,
-            // shortUrl: item.shorten_path,
             destinationUrl: item.destination_url,
             clickCount: parseInt(item.click_count, 10),
           }));
@@ -93,7 +92,7 @@ export default function ManageUrls() {
                 <tr key={index}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <a 
-                      href={`/${url.shortUrl}`}
+                      href={`${url.shortUrl}`}
                       className="text-blue-600 hover:text-blue-800"
                       target="_blank"
                       rel="noopener noreferrer"
