@@ -1,7 +1,6 @@
 "use client"
 import { useEffect, useState } from 'react';
 import getDestinationUrl from "@/app/lib/getDestinationUrl";
-import Head from 'next/head'
 
 
 type Params = {
@@ -38,12 +37,5 @@ export default function ResolvePage({ params: { key } }: Params) {
 
   return (
     <>
-      <Head>
-        <title>A product of Yashl</title>
-        <meta property="og:title" content="A Product of Yashl" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.reddit.com/r/aws/comments/d9ksyx/running_binaries_in_lambda/" />
-        <meta property="og:image" content="https://hlogs-bucket.s3.ap-southeast-1.amazonaws.com/0Izihh.png" />
-      </Head>
     </>
   )}
