@@ -25,6 +25,6 @@ export default async function assumeRole() {
       const response = await client.send(command);
       return response;
     } catch (err) {
-      console.error(err);
+      return err;
     }
 };

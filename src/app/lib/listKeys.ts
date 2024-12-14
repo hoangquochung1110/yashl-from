@@ -23,14 +23,14 @@ export default async function listKeys(uid: string) {
       'Host': host,
     },
   };
-
-  const assumeRoleResponse = await assumeRole();
-  if (!assumeRoleResponse || !assumeRoleResponse.Credentials) {
-    throw new Error('Assume role response is undefined');
-  }
-  const { AccessKeyId, SecretAccessKey, SessionToken } = assumeRoleResponse.Credentials;
-
-  const signer = aws4.sign({
+  try{
+    const assumeRoleResponse = await assumeRole();
+    if (!assumeRoleResponse) {
+      throw new Error('Assume role response is undefined');
+    }
+    const { AccessKeyId, SecretAccessKey, SessionToken } = assumeRoleResponse.Credentials;
+    console.log(AccessKeyId, SecretAccessKey, SessionToken);
+    const signer = aws4.sign({
       service: service,
       region: region,
       path: canonicalURI,
@@ -64,4 +64,7 @@ export default async function listKeys(uid: string) {
   
       req.end();
     });
+  } catch{
+    throw new Error('Fail to assume role');
+  }
 }
