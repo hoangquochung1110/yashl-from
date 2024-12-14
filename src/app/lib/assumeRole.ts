@@ -4,8 +4,16 @@ import { STSClient, AssumeRoleCommand, AssumeRoleCommandOutput } from "@aws-sdk/
 const REGION = process.env.NEXT_AWS_REGION;
 const ROLE_ARN = process.env.NEXT_AWS_ROLE_ARN;
 
+const credentials = {
+  accessKeyId: process.env.NEXT_AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.NEXT_AWS_SECRET_ACCESS_KEY,
+};
+
 // Create an AWS STS service client object.
-export const client = new STSClient({ region: REGION });
+export const client = new STSClient({
+  region: REGION,
+  credentials: credentials,
+});
 
 
 export default async function assumeRole(): Promise<AssumeRoleCommandOutput> {
