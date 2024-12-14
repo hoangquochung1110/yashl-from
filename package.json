@@ -11,6 +11,7 @@
   "dependencies": {
     "@aws-sdk/client-sts": "^3.709.0",
     "@radix-ui/react-label": "^2.1.0",
+    "@types/aws4": "^1.11.6",
     "aws4": "^1.13.2",
     "class-variance-authority": "^0.7.0",
     "firebase": "^9.23.0",
