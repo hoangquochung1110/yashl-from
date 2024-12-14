@@ -2,6 +2,9 @@
 
 import Link from 'next/link';
 import ProtectedRoute from '../components/ProtectedRoute';
+import listKeys from '../lib/listKeys';
+
+
 interface UrlEntry {
   shortUrl: string;
   destinationUrl: string;
@@ -35,19 +38,14 @@ export default function ManageUrls() {
   useEffect(() => {
     const fetchUrls = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_KEY_LIST_API_URL}?user_id=${user?.uid}`)
-        if (response.ok) {
-          const data = await response.json();
-          console.log(data);
-          const urls: UrlEntry[] = data.map((item: { key_id: string, user_id: string, shorten_path: string, destination_url: string, click_count: string }) => ({
-            shortUrl: `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${item.shorten_path}`,
-            destinationUrl: item.destination_url,
-            clickCount: parseInt(item.click_count, 10),
-          }));
+        const response = await listKeys(user?.uid as string);
+        const data = JSON.parse(response.body);
+        const urls: UrlEntry[] = data.map((item: { key_id: string, user_id: string, shorten_path: string, destination_url: string, click_count: string }) => ({
+          shortUrl: `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${item.shorten_path}`,
+          destinationUrl: item.destination_url,
+          clickCount: parseInt(item.click_count, 10),
+        }));
           setUrls(urls);
-        } else {
-          console.error('Error fetching URLs:', response.statusText);
-        }
       } catch (error) {
         console.error('Error fetching URLs:', error);
       }
