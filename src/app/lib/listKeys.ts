@@ -28,8 +28,7 @@ export default async function listKeys(uid: string) {
     if (!assumeRoleResponse) {
       throw new Error('Assume role response is undefined');
     }
-    const { AccessKeyId, SecretAccessKey, SessionToken } = assumeRoleResponse.Credentials;
-    console.log(AccessKeyId, SecretAccessKey, SessionToken);
+    const { AccessKeyId, SecretAccessKey, SessionToken } = assumeRoleResponse.Credentials ?? {};
     const signer = aws4.sign({
       service: service,
       region: region,
