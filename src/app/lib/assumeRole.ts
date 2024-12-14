@@ -7,8 +7,17 @@ const ROLE_ARN = process.env.NEXT_AWS_ROLE_ARN;
 // Create an AWS STS service client object.
 export const client = new STSClient({ region: REGION });
 
-export default async function assumeRole() {
-    try {
+interface AssumeRoleResponse {
+  Credentials: {
+    AccessKeyId: string;
+    SecretAccessKey: string;
+    SessionToken: string;
+  };
+}
+
+
+export default async function assumeRole(): Promise<AssumeRoleResponse> {
+  try {
       // Returns a set of temporary security credentials that you can use to
       // access Amazon Web Services resources that you might not normally
       // have access to.
