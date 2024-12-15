@@ -20,7 +20,9 @@ import { User, onAuthStateChanged } from 'firebase/auth';
 export default function ManageUrls() {
   const [user, setUser] = useState<User | null>(null);
 
-  const [urls, setUrls] = useState<UrlEntry[]>([]);
+  const [urls, setUrls] = useState<null | UrlEntry[]>(null);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -46,11 +48,12 @@ export default function ManageUrls() {
           clickCount: parseInt(item.click_count, 10),
         }));
           setUrls(urls);
+          setLoading(false);
       } catch (error) {
         console.error('Error fetching URLs:', error);
       }
     };
-  
+
     if (user?.uid) {
       fetchUrls();
     }
@@ -61,7 +64,7 @@ export default function ManageUrls() {
          <main className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Manage Shortened URLs</h1>
+        <h1 className="text-2xl font-bold">Manage Shortened URLs</h1>
           <Link 
             href="/" 
             className="text-blue-600 hover:text-blue-800 underline"
@@ -69,45 +72,52 @@ export default function ManageUrls() {
             Back to Home
           </Link>
         </div>
-        
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Shortened URL
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Destination URL
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Click Count
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {urls.map((url, index) => (
-                <tr key={index}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <a 
-                      href={`${url.shortUrl}`}
-                      className="text-blue-600 hover:text-blue-800"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {url.shortUrl}
-                    </a>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap truncate max-w-xs">
-                    {url.destinationUrl}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {url.clickCount}
-                  </td>
+
+        <div className="rounded-lg overflow-hidden">
+          {loading ? (
+            <svg className="animate-spin h-10 w-10 text-blue-600" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Shortened URL
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Destination URL
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Click Count
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {urls?.map((url, index) => (
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <a 
+                        href={`${url.shortUrl}`}
+                        className="text-blue-600 hover:text-blue-800"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {url.shortUrl}
+                      </a>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap truncate max-w-xs">
+                      {url.destinationUrl}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {url.clickCount}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </main>
