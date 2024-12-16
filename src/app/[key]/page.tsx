@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState } from 'react';
 import getDestinationUrl from "@/app/lib/getDestinationUrl";
+import takeScreenshot from '@/app/lib/screenshot';
 
 
 type Params = {
@@ -29,11 +30,19 @@ export default function ResolvePage({ params: { key } }: Params) {
   }, [key]);
 
   useEffect(() => {
-    if (destinationUrl) {
-      // Redirect to the destination URL
-      window.location.href = destinationUrl;
+    if (destinationUrl && key) {
+      // Call takeScreenshot when destinationUrl is set
+      takeScreenshot(key, destinationUrl)
+        .then((response) => {
+          console.log(response);
+        })
+        .catch((error) => {
+          console.error("Error taking screenshot:", error);
+          // Optionally handle the error, e.g., redirect anyway
+          window.location.href = destinationUrl;
+        });
     }
-  }, [destinationUrl]);
+  }, [destinationUrl, key]);
 
   return (
     <>

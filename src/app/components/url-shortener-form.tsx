@@ -5,7 +5,7 @@ import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
-import { shortenUrl } from '../actions'
+import shortenUrl from '@/app/lib/generateKey';
 import { ShortenedUrlDisplay } from './shortened-url-display'
 import { auth } from '../lib/firebase';
 import { User, onAuthStateChanged } from 'firebase/auth';
@@ -32,13 +32,15 @@ export function UrlShortenerForm() {
 
   async function handleSubmit(formData: FormData) {
     formData.append('uid', user?.uid as string)
-    const result = await shortenUrl(formData)
-    if ('error' in result) {
-      setError(result.error ?? 'An unknown error occurred')
-      setShortUrl(null)
-    } else {
-      setShortUrl(result.shortUrl)
-      setError(null)
+    try{
+      const res = await shortenUrl(formData)
+      if (typeof res === 'object' && res.error) {
+        setError(res.error); // Handle error from shortenUrl
+      } else if (typeof res === 'string') {
+        setShortUrl(res); // Set the short URL state
+      }
+    } catch (error) {
+      setError(String(error));
     }
   }
 

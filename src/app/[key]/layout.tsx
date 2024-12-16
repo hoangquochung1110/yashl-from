@@ -22,6 +22,26 @@ export const metadata = {
 };
 
 
+// type Params = {
+//   params: {
+//     key: string
+//   }
+// }
+
+
+// Dynamic metadata
+// export async function generateMetadata({ params: { key } }: Params) {
+
+//   // fetch data
+//   const product = await fetch(`http://localhost:3001/products/${id}`);
+//   const resMetadata = await product.json();
+
+//   return {
+//     title: resMetadata.title,
+//     description: resMetadata.description,
+//   };
+// }
+
 export default function ResolvePageLayout({
     children,
   }: {
