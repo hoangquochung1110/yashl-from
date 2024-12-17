@@ -13,7 +13,7 @@ type Params = {
 export async function generateMetadata({ params: { key } }: Params) {
 
   // fetch data
-  const screenshotPreview = `https://hlogs-bucket.s3.ap-southeast-1.amazonaws.com/${key}`;
+  const screenshotPreview = "https://hlogs-bucket.s3.ap-southeast-1.amazonaws.com/j3qMEe.png";
   const { destinationUrl} = await getDestinationUrl(key);
 
   return {
