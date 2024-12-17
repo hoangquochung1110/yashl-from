@@ -1,17 +1,34 @@
 import React from 'react';
 import RootLayout from '@/app/layout';
+import getDestinationUrl from '@/app/lib/getDestinationUrl';
 
-export const metadata = {
+type Params = {
+  params: {
+    key: string
+  }
+}
+
+
+// Dynamic metadata
+export async function generateMetadata({ params: { key } }: Params) {
+
+  // fetch data
+  const screenshotPreview = `https://hlogs-bucket.s3.ap-southeast-1.amazonaws.com${key}`;
+  const { destinationUrl} = await getDestinationUrl(key);
+
+  return {
+    // title: resMetadata.title,
+    // description: resMetadata.description,
     title: 'A product of Hung Hoang',
     description: 'A product of Hung Hoang',
     openGraph: {
         title: 'A product of Hung Hoang',
         description: 'A product of Hung Hoang',
-        url: 'https://www.reddit.com/r/aws/comments/d9ksyx/running_binaries_in_lambda/',
+        url: destinationUrl,
         siteName: 'reddit.com',
         images: [
           {
-            url: 'https://hlogs-bucket.s3.ap-southeast-1.amazonaws.com/0Izihh.png', // Must be an absolute URL
+            url: screenshotPreview, // Must be an absolute URL
             width: 800,
             height: 600,
           }
@@ -19,28 +36,8 @@ export const metadata = {
         locale: 'en_US',
         type: 'website',
       },
-};
-
-
-// type Params = {
-//   params: {
-//     key: string
-//   }
-// }
-
-
-// Dynamic metadata
-// export async function generateMetadata({ params: { key } }: Params) {
-
-//   // fetch data
-//   const product = await fetch(`http://localhost:3001/products/${id}`);
-//   const resMetadata = await product.json();
-
-//   return {
-//     title: resMetadata.title,
-//     description: resMetadata.description,
-//   };
-// }
+  };
+}
 
 export default function ResolvePageLayout({
     children,
