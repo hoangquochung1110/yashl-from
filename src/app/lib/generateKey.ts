@@ -8,13 +8,13 @@ const canonicalURI = '/key';
 const service = 'execute-api';
 const region = process.env.AWS_REGION;
 
-export default async function shortenUrl(formData: FormData) {
+export default async function shortenUrl(formData: FormData): Promise<{ key: string; shortUrl: string }> {
   // Combine the key with custom domain to form the full shortened URL
   // For example: https://<custom_domain>/<key>.html
   const url = formData.get('url') as string;
   const uid = formData.get('uid') as string;
   if (!url) {
-    return { error: 'URL is required' };
+    throw Error("URL is required");
   }
   const options = {
     hostname: host,
@@ -45,7 +45,7 @@ export default async function shortenUrl(formData: FormData) {
     });
     
     Object.assign(options.headers, signer.headers);
-    return new Promise<string>((resolve, reject) => {
+    return new Promise<{ key: string, shortUrl: string }>((resolve, reject) => {
       const req = https.request(options, (res) => {
         let body = '';
         res.on('data', (chunk) => {
@@ -54,11 +54,10 @@ export default async function shortenUrl(formData: FormData) {
         res.on('end', () => {
           try {
             const result = JSON.parse(body);
-            console.log(typeof(result), result);
-            const shortKey = result.key;
+            const key = result.key;
             // TODO: in case no NEXT_PUBLIC_CLIENT_DOMAIN, need a default domain
-            const shortUrl = `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${shortKey}.html`;
-            resolve(shortUrl); // Return shortUrl directly
+            const shortUrl = `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${key}.html`;
+            resolve({key, shortUrl}); // Return shortUrl directly
           } catch (error) {
             reject(error);
           }

@@ -9,12 +9,17 @@ import shortenUrl from '@/app/lib/generateKey';
 import { ShortenedUrlDisplay } from './shortened-url-display'
 import { auth } from '../lib/firebase';
 import { User, onAuthStateChanged } from 'firebase/auth';
+import ScreenshotPreview from './screenshot-preview';
+import { takeScreenshot, TakeScreenshotResponse} from '../lib/screenshot';
 
 
 export function UrlShortenerForm() {
-  const [shortUrl, setShortUrl] = useState<string | null>(null)
+  const [key, setKey] = useState('');
+  const [shortUrl, setShortUrl] = useState('');
+  const [screenshot, setScreenshot] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -27,20 +32,25 @@ export function UrlShortenerForm() {
       }
     });
 
-    return () => unsubscribe(); // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
   async function handleSubmit(formData: FormData) {
     formData.append('uid', user?.uid as string)
-    try{
-      const res = await shortenUrl(formData)
-      if (typeof res === 'object' && res.error) {
-        setError(res.error); // Handle error from shortenUrl
-      } else if (typeof res === 'string') {
-        setShortUrl(res); // Set the short URL state
-      }
+    try {
+      setIsLoading(true);
+      console.log(isLoading); // add this line after updating the isLoading state
+
+      const data = await shortenUrl(formData)
+      setKey(data.key);
+      setShortUrl(data.shortUrl);
+      const response: TakeScreenshotResponse = await takeScreenshot(data.key, formData.get('url') as string);
+      console.log('Screenshot URL:', response.s3ObjectUrl);
+      setScreenshot(response.s3ObjectUrl);
     } catch (error) {
       setError(String(error));
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -51,17 +61,33 @@ export function UrlShortenerForm() {
         <CardDescription>Enter a long URL to get a shortened version</CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={handleSubmit}>
+        <form onSubmit={(e) => {
+          e.preventDefault(); // Prevent default form submission
+          const formData = new FormData(e.currentTarget); // Create FormData from the form
+          handleSubmit(formData); // Call handleSubmit with FormData
+        }}>
           <div className="grid w-full items-center gap-4">
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor="url">Destination URL</Label>
               <Input id="url" name="url" placeholder="https://example.com/very/long/url" required />
             </div>
           </div>
-          <Button className="w-full mt-4" type="submit">Shorten URL</Button>
+          <Button className="w-full mt-4" type="submit" disabled={isLoading}>
+            {isLoading ? 'Shortening...' : 'Shorten URL'}
+          </Button>
         </form>
         {error && <p className="text-red-500 mt-4">{error}</p>}
         {shortUrl && <ShortenedUrlDisplay url={shortUrl} />}
+        {isLoading ? (
+          <div className="flex justify-center items-center p-4">
+            <svg className="animate-spin h-10 w-10 text-blue-600" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+            </svg>
+          </div>
+        ) : screenshot && (
+            <ScreenshotPreview imageUrl={screenshot} />
+        )}
       </CardContent>
     </Card>
   )
