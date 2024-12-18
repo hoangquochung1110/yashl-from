@@ -14,7 +14,6 @@ import { takeScreenshot, TakeScreenshotResponse} from '../lib/screenshot';
 
 
 export function UrlShortenerForm() {
-  const [key, setKey] = useState('');
   const [shortUrl, setShortUrl] = useState('');
   const [screenshot, setScreenshot] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -42,7 +41,6 @@ export function UrlShortenerForm() {
       console.log(isLoading); // add this line after updating the isLoading state
 
       const data = await shortenUrl(formData)
-      setKey(data.key);
       setShortUrl(data.shortUrl);
       const response: TakeScreenshotResponse = await takeScreenshot(data.key, formData.get('url') as string);
       console.log('Screenshot URL:', response.s3ObjectUrl);

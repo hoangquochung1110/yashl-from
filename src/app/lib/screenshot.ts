@@ -62,7 +62,7 @@ export async function takeScreenshot(key: string, url: string): Promise<TakeScre
           try {
             const result: ScreenshotApiResponse = JSON.parse(body);
             const s3ObjectUrl = result.data.url;
-            resolve(s3ObjectUrl);
+            resolve({s3ObjectUrl});
           } catch (error) {
             reject(error);
           }
