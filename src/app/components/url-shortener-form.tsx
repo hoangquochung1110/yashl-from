@@ -10,26 +10,7 @@ import { ShortenedUrlDisplay } from './shortened-url-display'
 import { auth } from '../lib/firebase';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import ScreenshotPreview from './screenshot-preview';
-
-
-const takeScreenshot = async (key: string, url: string) => {
-  // Simulate a delay
-  await new Promise(resolve => setTimeout(resolve, 5000)); // Delay of 2 seconds
-
-  console.log("Taking screenshots... (mocked)");
-
-  // Simulate a successful response body
-  const mockResponseBody = {
-      url: "https://hlogs-bucket.s3.ap-southeast-1.amazonaws.com/SVN12.png"
-  };
-
-  // Log the mocked response
-  console.log("body after parsed", mockResponseBody);
-  console.log("s3 url: ", mockResponseBody.url);
-
-  // Return the mocked URL
-  return mockResponseBody.url;
-};
+import { takeScreenshot, TakeScreenshotResponse} from '../lib/screenshot';
 
 
 export function UrlShortenerForm() {
@@ -63,9 +44,9 @@ export function UrlShortenerForm() {
       const data = await shortenUrl(formData)
       setKey(data.key);
       setShortUrl(data.shortUrl);
-      const screenshotUrl = await takeScreenshot(data.key, formData.get('url') as string);
-      console.log('Screenshot URL:', screenshotUrl);
-      setScreenshot(screenshotUrl);
+      const response: TakeScreenshotResponse = await takeScreenshot(data.key, formData.get('url') as string);
+      console.log('Screenshot URL:', response.s3ObjectUrl);
+      setScreenshot(response.s3ObjectUrl);
     } catch (error) {
       setError(String(error));
     } finally {

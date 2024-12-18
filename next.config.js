@@ -8,7 +8,7 @@ const nextConfig = {
         return config;
     },
     images: {
-        domains: ['hlogs-bucket.s3.ap-southeast-1.amazonaws.com'],
+        domains: ['yashl-preview.s3.ap-southeast-1.amazonaws.com'],
     },
 }
 
