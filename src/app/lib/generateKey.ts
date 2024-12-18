@@ -9,6 +9,8 @@ const service = 'execute-api';
 const region = process.env.AWS_REGION;
 
 export default async function shortenUrl(formData: FormData) {
+  // Combine the key with custom domain to form the full shortened URL
+  // For example: https://<custom_domain>/<key>.html
   const url = formData.get('url') as string;
   const uid = formData.get('uid') as string;
   if (!url) {
@@ -54,7 +56,8 @@ export default async function shortenUrl(formData: FormData) {
             const result = JSON.parse(body);
             console.log(typeof(result), result);
             const shortKey = result.key;
-            const shortUrl = `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${shortKey}`;
+            // TODO: in case no NEXT_PUBLIC_CLIENT_DOMAIN, need a default domain
+            const shortUrl = `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${shortKey}.html`;
             resolve(shortUrl); // Return shortUrl directly
           } catch (error) {
             reject(error);
