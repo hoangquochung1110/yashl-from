@@ -38,17 +38,29 @@ export function UrlShortenerForm() {
     formData.append('uid', user?.uid as string)
     try {
       setIsLoading(true);
-      const data = await shortenUrl(formData)
-      setShortUrl(data.shortUrl);
-      
-      const response: TakeScreenshotResponse = await takeScreenshot(data.key, formData.get('url') as string);
-      if (!response || !response.s3ObjectUrl) {
-        throw new Error('Failed to generate screenshot: Invalid response from server');
+      const data = await shortenUrl(formData);
+
+      // Validate shortenUrl response before proceeding
+      if (!data || !data.key || !data.shortUrl) {
+        throw new Error('Failed to generate short URL: Invalid response from server');
       }
-      
-      console.log("response of takeScreenshot", response);
-      console.log('Screenshot URL:', response.s3ObjectUrl);
-      setScreenshot(response.s3ObjectUrl);
+
+      // Set shortUrl only after validation
+      setShortUrl(data.shortUrl);
+
+      try {
+        const response: TakeScreenshotResponse = await takeScreenshot(data.key, formData.get('url') as string);
+        console.log("response of takeScreenshot", response);
+        // Proceed with screenshot only if we have a valid key
+        if (!response || !response.s3ObjectUrl) {
+          throw new Error('Failed to generate screenshot: Invalid response from server');
+        }
+        console.log('Screenshot URL:', response.s3ObjectUrl);
+        setScreenshot(response.s3ObjectUrl);
+      } catch (error) {
+        setError(String(error));
+        setScreenshot(null);
+      }
     } catch (error) {
       setError(String(error));
       setScreenshot(null);
