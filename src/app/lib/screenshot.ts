@@ -55,29 +55,49 @@ export async function takeScreenshot(key: string, url: string): Promise<TakeScre
     return new Promise((resolve, reject) => {
       const req = https.request(options, (res) => {
         let body = '';
+        
+        // Check for 5xx status codes
+        if (res.statusCode && res.statusCode >= 500) {
+          reject(new Error(`Server error: ${res.statusCode}`));
+          return;
+        }
+
         res.on('data', (chunk) => {
           body += chunk;
         });
+
         res.on('end', () => {
           try {
+            // Additional status code check for non-200 responses
+            if (res.statusCode !== 200) {
+              const errorData = JSON.parse(body);
+              throw new Error(errorData.message || `Request failed with status ${res.statusCode}`);
+            }
+
             const result: ScreenshotApiResponse = JSON.parse(body);
             const s3ObjectUrl = result.data.url;
             resolve({s3ObjectUrl});
           } catch (error) {
-            reject(error);
+            reject(error instanceof Error ? error : new Error('Failed to process response'));
           }
         });
       });
   
       req.on('error', (e) => {
-        reject(e);
+        reject(new Error(`Network error: ${e.message}`));
+      });
+
+      // Set timeout for the request
+      req.setTimeout(30000, () => {
+        req.destroy();
+        reject(new Error('Request timeout after 30 seconds'));
       });
   
       req.write(JSON.stringify({ destinationUrl: url, key: key }));
       req.end();
     });
   } catch(err) {
-    throw err;
+    throw new Error(`Screenshot service error: ${err instanceof Error ? err.message : 'Unknown error'}`);
   }
 }
 
