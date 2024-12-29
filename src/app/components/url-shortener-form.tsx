@@ -38,16 +38,20 @@ export function UrlShortenerForm() {
     formData.append('uid', user?.uid as string)
     try {
       setIsLoading(true);
-      console.log(isLoading); // add this line after updating the isLoading state
-
       const data = await shortenUrl(formData)
       setShortUrl(data.shortUrl);
+      
       const response: TakeScreenshotResponse = await takeScreenshot(data.key, formData.get('url') as string);
+      if (!response || !response.s3ObjectUrl) {
+        throw new Error('Failed to generate screenshot: Invalid response from server');
+      }
+      
       console.log("response of takeScreenshot", response);
       console.log('Screenshot URL:', response.s3ObjectUrl);
       setScreenshot(response.s3ObjectUrl);
     } catch (error) {
       setError(String(error));
+      setScreenshot(null);
     } finally {
       setIsLoading(false);
     }
