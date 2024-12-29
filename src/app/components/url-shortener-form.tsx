@@ -43,6 +43,7 @@ export function UrlShortenerForm() {
       
       const response: TakeScreenshotResponse = await takeScreenshot(data.key, formData.get('url') as string);
       if (!response || !response.s3ObjectUrl) {
+        console.log("response", response);
         throw new Error('Failed to generate screenshot: Invalid response from server');
       }
       
