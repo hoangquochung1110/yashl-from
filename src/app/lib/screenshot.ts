@@ -37,6 +37,7 @@ export async function takeScreenshot(key: string, url: string): Promise<TakeScre
     if (!assumeRoleResponse) {
       throw new Error('Assume role response is undefined');
     }
+    
     const { AccessKeyId, SecretAccessKey, SessionToken } = assumeRoleResponse.Credentials ?? {};
     const signer = aws4.sign({
       service: service,
@@ -52,50 +53,48 @@ export async function takeScreenshot(key: string, url: string): Promise<TakeScre
     });
     
     Object.assign(options.headers, signer.headers);
-    return new Promise((resolve, reject) => {
+
+    const response = await new Promise<{statusCode?: number, body: string}>((resolve, reject) => {
       const req = https.request(options, (res) => {
         let body = '';
-        
-        // Check for 5xx status codes
-        if (res.statusCode && res.statusCode >= 500) {
-          reject(new Error(`Server error: ${res.statusCode}`));
-          return;
-        }
-
         res.on('data', (chunk) => {
           body += chunk;
         });
-
         res.on('end', () => {
-          try {
-            // Additional status code check for non-200 responses
-            if (res.statusCode !== 200) {
-              const errorData = JSON.parse(body);
-              throw new Error(errorData.message || `Request failed with status ${res.statusCode}`);
-            }
-            console.log("body before parsed", body);
-            const result: ScreenshotApiResponse = JSON.parse(body);
-            const s3ObjectUrl = result.data.url;
-            resolve({s3ObjectUrl});
-          } catch (error) {
-            reject(error instanceof Error ? error : new Error('Failed to process response'));
-          }
+          resolve({
+            statusCode: res.statusCode,
+            body
+          });
         });
       });
-  
+
       req.on('error', (e) => {
         reject(new Error(`Network error: ${e.message}`));
       });
 
-      // Set timeout for the request
-      req.setTimeout(30000, () => {
-        req.destroy();
-        reject(new Error('Request timeout after 30 seconds'));
-      });
-  
       req.write(JSON.stringify({ destinationUrl: url, key: key }));
       req.end();
     });
+
+    // Check for 5xx status codes
+    if (response.statusCode && response.statusCode >= 500) {
+      throw new Error(`Server error: ${response.statusCode}`);
+    }
+
+    // Check for non-200 responses
+    if (response.statusCode !== 200) {
+      const errorData = JSON.parse(response.body);
+      throw new Error(errorData.message || `Request failed with status ${response.statusCode}`);
+    }
+
+    console.log("body before parsed", response.body);
+    const result: ScreenshotApiResponse = JSON.parse(response.body);
+    
+    if (!result.data?.url) {
+      throw new Error('Screenshot URL not found in response');
+    }
+
+    return { s3ObjectUrl: result.data.url };
   } catch(err) {
     throw new Error(`Screenshot service error: ${err instanceof Error ? err.message : 'Unknown error'}`);
   }
