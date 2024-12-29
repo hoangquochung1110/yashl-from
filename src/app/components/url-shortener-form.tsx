@@ -43,6 +43,7 @@ export function UrlShortenerForm() {
       const data = await shortenUrl(formData)
       setShortUrl(data.shortUrl);
       const response: TakeScreenshotResponse = await takeScreenshot(data.key, formData.get('url') as string);
+      console.log("response of takeScreenshot", response);
       console.log('Screenshot URL:', response.s3ObjectUrl);
       setScreenshot(response.s3ObjectUrl);
     } catch (error) {
