@@ -1,16 +1,16 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
-import { Button } from "./ui/button"
-import { Input } from "./ui/input"
-import { Label } from "./ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import shortenUrl from '@/app/lib/generateKey';
-import { ShortenedUrlDisplay } from './shortened-url-display'
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { useEffect, useState } from 'react';
 import { auth } from '../lib/firebase';
-import { User, onAuthStateChanged } from 'firebase/auth';
+import { takeScreenshot, TakeScreenshotResponse } from '../lib/screenshot';
 import ScreenshotPreview from './screenshot-preview';
-import { takeScreenshot, TakeScreenshotResponse} from '../lib/screenshot';
+import { ShortenedUrlDisplay } from './shortened-url-display';
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 
 
 export function UrlShortenerForm() {
