@@ -45,7 +45,7 @@ export async function takeScreenshot(shortPath: string, url: string): Promise<Ta
       path: canonicalURI,
       headers: options.headers,
       method: options.method,
-      body: JSON.stringify({ destinationUrl: url, key: shortPath }),
+      body: JSON.stringify({ target_url: url, short_path: shortPath }),
     }, {
       accessKeyId: AccessKeyId,
       secretAccessKey: SecretAccessKey,
@@ -72,7 +72,7 @@ export async function takeScreenshot(shortPath: string, url: string): Promise<Ta
         reject(new Error(`Network error: ${e.message}`));
       });
 
-      req.write(JSON.stringify({ destinationUrl: url, key: shortPath }));
+      req.write(JSON.stringify({ target_url: url, short_path: shortPath }));
       req.end();
     });
 
