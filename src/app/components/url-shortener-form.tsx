@@ -41,7 +41,7 @@ export function UrlShortenerForm() {
       const data = await shortenUrl(formData);
 
       // Validate shortenUrl response before proceeding
-      if (!data || !data.key || !data.shortUrl) {
+      if (!data || !data.shortPath || !data.shortUrl) {
         throw new Error('Failed to generate short URL: Invalid response from server');
       }
 
@@ -49,7 +49,7 @@ export function UrlShortenerForm() {
       setShortUrl(data.shortUrl);
 
       try {
-        const response: TakeScreenshotResponse = await takeScreenshot(data.key, formData.get('url') as string);
+        const response: TakeScreenshotResponse = await takeScreenshot(data.shortPath, formData.get('url') as string);
         console.log("response of takeScreenshot", response);
         // Proceed with screenshot only if we have a valid key
         if (!response || !response.s3ObjectUrl) {

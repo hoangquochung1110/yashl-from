@@ -42,10 +42,10 @@ export default function ManageUrls() {
       try {
         const response = await listKeys(user?.uid as string);
         const data = JSON.parse(response.body);
-        const urls: UrlEntry[] = data.map((item: { key_id: string, user_id: string, shorten_path: string, destination_url: string, click_count: string }) => ({
-          shortUrl: `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${item.shorten_path}`,
-          destinationUrl: item.destination_url,
-          clickCount: parseInt(item.click_count, 10),
+        const urls: UrlEntry[] = data.keys.map((item: { key_id: string, user_id: string, short_path: string, target_url: string, hits: string }) => ({
+          shortUrl: `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${item.short_path}.html`,
+          destinationUrl: item.target_url,
+          clickCount: parseInt(item.hits, 10),
         }));
           setUrls(urls);
           setLoading(false);

@@ -8,7 +8,7 @@ const canonicalURI = '/key';
 const service = 'execute-api';
 const region = process.env.AWS_REGION;
 
-export default async function shortenUrl(formData: FormData): Promise<{ key: string; shortUrl: string }> {
+export default async function shortenUrl(formData: FormData): Promise<{ shortPath: string; shortUrl: string }> {
   // Combine the key with custom domain to form the full shortened URL
   // For example: https://<custom_domain>/<key>.html
   const url = formData.get('url') as string;
@@ -37,7 +37,7 @@ export default async function shortenUrl(formData: FormData): Promise<{ key: str
       path: canonicalURI,
       headers: options.headers,
       method: options.method,
-      body: JSON.stringify({ destination_url: url, user_id: uid }),
+      body: JSON.stringify({ target_url: url, user_id: uid }),
     }, {
       accessKeyId: AccessKeyId,
       secretAccessKey: SecretAccessKey,
@@ -45,7 +45,7 @@ export default async function shortenUrl(formData: FormData): Promise<{ key: str
     });
     
     Object.assign(options.headers, signer.headers);
-    return new Promise<{ key: string, shortUrl: string }>((resolve, reject) => {
+    return new Promise<{ shortPath: string, shortUrl: string }>((resolve, reject) => {
       const req = https.request(options, (res) => {
         let body = '';
         res.on('data', (chunk) => {
@@ -54,10 +54,10 @@ export default async function shortenUrl(formData: FormData): Promise<{ key: str
         res.on('end', () => {
           try {
             const result = JSON.parse(body);
-            const key = result.key;
+            const shortPath = result.short_path;
             // TODO: in case no NEXT_PUBLIC_CLIENT_DOMAIN, need a default domain
-            const shortUrl = `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${key}.html`;
-            resolve({key, shortUrl}); // Return shortUrl directly
+            const shortUrl = `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${shortPath}.html`;
+            resolve({shortPath: shortPath, shortUrl: shortUrl}); // Return shortUrl directly
           } catch (error) {
             reject(error);
           }
@@ -68,7 +68,7 @@ export default async function shortenUrl(formData: FormData): Promise<{ key: str
         reject(e);
       });
   
-      req.write(JSON.stringify({ destination_url: url, user_id: uid }));
+      req.write(JSON.stringify({ target_url: url, user_id: uid }));
       req.end();
     });
   } catch {

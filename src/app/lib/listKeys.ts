@@ -12,7 +12,7 @@ interface ListKeysResponse {
 export default async function listKeys(uid: string) {
   const service = 'execute-api';
   const host = process.env.NEXT_PUBLIC_BACKEND_DOMAIN;
-  const canonicalURI = `/list_key?user_id=${uid}`;
+  const canonicalURI = `/key?user_id=${uid}`;
   const region = 'ap-southeast-1';
 
   const options = {

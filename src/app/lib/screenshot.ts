@@ -16,7 +16,7 @@ export interface TakeScreenshotResponse {
   s3ObjectUrl: string;
 }
 
-export async function takeScreenshot(key: string, url: string): Promise<TakeScreenshotResponse> {
+export async function takeScreenshot(shortPath: string, url: string): Promise<TakeScreenshotResponse> {
   const service = 'execute-api';
   const host = process.env.NEXT_PUBLIC_BACKEND_DOMAIN;
   const canonicalURI = '/screenshots';
@@ -45,7 +45,7 @@ export async function takeScreenshot(key: string, url: string): Promise<TakeScre
       path: canonicalURI,
       headers: options.headers,
       method: options.method,
-      body: JSON.stringify({ destinationUrl: url, key: key }),
+      body: JSON.stringify({ destinationUrl: url, key: shortPath }),
     }, {
       accessKeyId: AccessKeyId,
       secretAccessKey: SecretAccessKey,
@@ -72,7 +72,7 @@ export async function takeScreenshot(key: string, url: string): Promise<TakeScre
         reject(new Error(`Network error: ${e.message}`));
       });
 
-      req.write(JSON.stringify({ destinationUrl: url, key: key }));
+      req.write(JSON.stringify({ destinationUrl: url, key: shortPath }));
       req.end();
     });
 
