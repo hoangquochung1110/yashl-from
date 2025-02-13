@@ -22,7 +22,6 @@ export interface TakeScreenshotResponse {
 export async function takeScreenshot(
   shortPath: string, 
   url: string, 
-  cookies?: string | null
 ): Promise<TakeScreenshotResponse> {
   const service = 'execute-api';
   const host = process.env.NEXT_PUBLIC_BACKEND_DOMAIN;
