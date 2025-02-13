@@ -1,12 +1,16 @@
 "use server";
 import aws4 from "aws4";
 import https from "https";
-import assumeRole from "@/app/lib/assumeRole";
 
 interface ListKeysResponse {
   statusCode: number | undefined;
   body: string;
 }
+
+const credentials = {
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+};
 
 
 export default async function listKeys(uid: string) {
@@ -24,11 +28,7 @@ export default async function listKeys(uid: string) {
     },
   };
   try{
-    const assumeRoleResponse = await assumeRole();
-    if (!assumeRoleResponse) {
-      throw new Error('Assume role response is undefined');
-    }
-    const { AccessKeyId, SecretAccessKey, SessionToken } = assumeRoleResponse.Credentials ?? {};
+    const { accessKeyId, secretAccessKey } = credentials ?? {};
     const signer = aws4.sign({
       service: service,
       region: region,
@@ -37,9 +37,8 @@ export default async function listKeys(uid: string) {
       method: options.method,
       body: '',
     }, {
-      accessKeyId: AccessKeyId,
-      secretAccessKey: SecretAccessKey,
-      sessionToken: SessionToken,
+      accessKeyId: accessKeyId,
+      secretAccessKey: secretAccessKey,
     });
     
     Object.assign(options.headers, signer.headers);
@@ -64,6 +63,6 @@ export default async function listKeys(uid: string) {
       req.end();
     });
   } catch{
-    throw new Error('Fail to assume role');
+    throw new Error('Fail to send request');
   }
 }

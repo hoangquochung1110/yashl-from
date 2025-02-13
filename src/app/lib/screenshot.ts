@@ -1,8 +1,11 @@
 "use server";
 import aws4 from "aws4";
 import https from "https";
-import assumeRole from "@/app/lib/assumeRole";
 
+const credentials = {
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+};
 
 interface ScreenshotApiResponse {
   message: string;
@@ -16,7 +19,11 @@ export interface TakeScreenshotResponse {
   s3ObjectUrl: string;
 }
 
-export async function takeScreenshot(shortPath: string, url: string): Promise<TakeScreenshotResponse> {
+export async function takeScreenshot(
+  shortPath: string, 
+  url: string, 
+  cookies?: string | null
+): Promise<TakeScreenshotResponse> {
   const service = 'execute-api';
   const host = process.env.NEXT_PUBLIC_BACKEND_DOMAIN;
   const canonicalURI = '/screenshots';
@@ -33,12 +40,7 @@ export async function takeScreenshot(shortPath: string, url: string): Promise<Ta
   };
 
   try {
-    const assumeRoleResponse = await assumeRole();
-    if (!assumeRoleResponse) {
-      throw new Error('Assume role response is undefined');
-    }
-    
-    const { AccessKeyId, SecretAccessKey, SessionToken } = assumeRoleResponse.Credentials ?? {};
+    const { accessKeyId, secretAccessKey } = credentials ?? {};
     const signer = aws4.sign({
       service: service,
       region: region,
@@ -47,9 +49,8 @@ export async function takeScreenshot(shortPath: string, url: string): Promise<Ta
       method: options.method,
       body: JSON.stringify({ target_url: url, short_path: shortPath }),
     }, {
-      accessKeyId: AccessKeyId,
-      secretAccessKey: SecretAccessKey,
-      sessionToken: SessionToken,
+      accessKeyId: accessKeyId,
+      secretAccessKey: secretAccessKey,
     });
     
     Object.assign(options.headers, signer.headers);
@@ -87,7 +88,6 @@ export async function takeScreenshot(shortPath: string, url: string): Promise<Ta
       throw new Error(errorData.message || `Request failed with status ${response.statusCode}`);
     }
 
-    console.log("body before parsed", response.body);
     const result: ScreenshotApiResponse = JSON.parse(response.body);
     
     if (!result.data?.url) {

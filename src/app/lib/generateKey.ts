@@ -1,16 +1,20 @@
 'use server'
 import aws4 from "aws4";
 import https from "https";
-import assumeRole from "@/app/lib/assumeRole";
 
 const host = process.env.NEXT_PUBLIC_BACKEND_DOMAIN;
 const canonicalURI = '/key';
 const service = 'execute-api';
 const region = process.env.AWS_REGION;
 
+const credentials = {
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+};
+
 export default async function shortenUrl(formData: FormData): Promise<{ shortPath: string; shortUrl: string }> {
   // Combine the key with custom domain to form the full shortened URL
-  // For example: https://<custom_domain>/<key>.html
+  // For example: https://<custom_domain>/<key>
   const url = formData.get('url') as string;
   const uid = formData.get('uid') as string;
   if (!url) {
@@ -26,11 +30,7 @@ export default async function shortenUrl(formData: FormData): Promise<{ shortPat
     },
   };
   try {
-    const assumeRoleResponse = await assumeRole();
-    if (!assumeRoleResponse) {
-      throw new Error('Assume role response is undefined');
-    }
-    const { AccessKeyId, SecretAccessKey, SessionToken } = assumeRoleResponse.Credentials ?? {};
+    const { accessKeyId, secretAccessKey } = credentials ?? {};
     const signer = aws4.sign({
       service: service,
       region: region,
@@ -39,9 +39,8 @@ export default async function shortenUrl(formData: FormData): Promise<{ shortPat
       method: options.method,
       body: JSON.stringify({ target_url: url, user_id: uid }),
     }, {
-      accessKeyId: AccessKeyId,
-      secretAccessKey: SecretAccessKey,
-      sessionToken: SessionToken,
+      accessKeyId: accessKeyId,
+      secretAccessKey: secretAccessKey,
     });
     
     Object.assign(options.headers, signer.headers);
@@ -55,8 +54,7 @@ export default async function shortenUrl(formData: FormData): Promise<{ shortPat
           try {
             const result = JSON.parse(body);
             const shortPath = result.short_path;
-            // TODO: in case no NEXT_PUBLIC_CLIENT_DOMAIN, need a default domain
-            const shortUrl = `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${shortPath}.html`;
+            const shortUrl = `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${shortPath}`;
             resolve({shortPath: shortPath, shortUrl: shortUrl}); // Return shortUrl directly
           } catch (error) {
             reject(error);
@@ -72,6 +70,6 @@ export default async function shortenUrl(formData: FormData): Promise<{ shortPat
       req.end();
     });
   } catch {
-    throw new Error('Failed to assume role or send request');
+    throw new Error('Failed to send request');
   }
 }
