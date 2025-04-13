@@ -5,6 +5,7 @@ import Link from 'next/link'
 import React, { useEffect, useState } from 'react';
 import { auth } from './lib/firebase';
 import { User, onAuthStateChanged } from 'firebase/auth';
+import logger from './lib/logger';
 
 
 export default function Home() {
@@ -13,12 +14,11 @@ export default function Home() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setUser(user);
-        console.log("User is signed in:", user.uid);
+        logger.debug('Auth', "User is signed in:", user.uid);
       } else {
-        setUser(null);
-        console.log("User is signed out");
+        logger.debug('Auth', "User is signed out");
       }
+      setUser(user);
     });
 
     return () => unsubscribe(); // Cleanup subscription on unmount

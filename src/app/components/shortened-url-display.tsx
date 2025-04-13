@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from "./ui/button"
 import { Check, Copy } from 'lucide-react'
+import logger from '../lib/logger'
 
 export function ShortenedUrlDisplay({ url }: { url: string }) {
   const [copied, setCopied] = useState(false)
@@ -13,7 +14,7 @@ export function ShortenedUrlDisplay({ url }: { url: string }) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
-      console.error('Failed to copy text: ', err)
+      logger.error('ShortenedUrlDisplay', 'Failed to copy text: ', err)
     }
   }
 

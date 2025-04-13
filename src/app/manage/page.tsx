@@ -5,6 +5,7 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import { listKeys } from '../lib/apiService';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useState } from 'react';
+import logger from '../lib/logger';
 
 interface UrlEntry {
   shortUrl: string;
@@ -27,7 +28,7 @@ export default function ManageUrls() {
         
         // Check if data.keys exists and is an array before mapping
         if (!data || !data.keys || !Array.isArray(data.keys)) {
-          console.error('Unexpected API response format:', data);
+          logger.error('ManageUrls', 'Unexpected API response format:', data);
           setUrls([]);
           setLoading(false);
           return;
@@ -40,7 +41,7 @@ export default function ManageUrls() {
         }));
         setUrls(urls);
       } catch (error) {
-        console.error('Error fetching URLs:', error);
+        logger.error('ManageUrls', 'Error fetching URLs:', error);
         setUrls([]);
       } finally {
         setLoading(false);

@@ -1,9 +1,10 @@
 'use server'
 import aws4 from "aws4";
 import https from "https";
+import logger from './logger';
 
 // Enable debug mode in development
-const DEBUG = process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_DEBUG === 'true';
+// const DEBUG = process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_DEBUG === 'true'; // Remove unused variable
 
 const host = process.env.NEXT_PUBLIC_BACKEND_DOMAIN;
 const service = 'execute-api';
@@ -17,13 +18,6 @@ const credentials = {
   accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
 };
-
-// Debug logging utility
-function debugLog(...args: unknown[]) {
-  if (DEBUG) {
-    console.log('[API Debug]', ...args);
-  }
-}
 
 interface ApiRequestOptions {
   path: string;
@@ -84,14 +78,19 @@ export async function apiRequest<T>({
     },
   };
 
+  // Type for headers allowing string index signature
+  type HeadersWithIndex = Record<string, string | undefined> & {
+    Host: string;
+    'Content-Type': string;
+  };
+
   const bodyString = body ? JSON.stringify(body) : undefined;
 
   try {
-    debugLog(`Request: ${method} ${host}${requestPath}`);
+    logger.debug('API Request', `=> ${method} ${host}${requestPath}, Timeout: ${timeout}ms`);
     if (body) {
-      debugLog(`Request body:`, body);
+      logger.debug('API Request', `Body:`, body);
     }
-    debugLog(`Request timeout: ${timeout}ms`);
     
     const signer = aws4.sign({
       service,
@@ -109,7 +108,11 @@ export async function apiRequest<T>({
     Object.assign(options.headers, signer.headers);
     
     // Only log headers in debug mode to avoid exposing credentials
-    debugLog(`Signed headers:`, options.headers);
+    const headersToLog: HeadersWithIndex = { ...options.headers }; // Use specific type
+    delete headersToLog['Authorization']; // No assertion needed now
+    delete headersToLog['x-api-key']; // No assertion needed now
+    
+    logger.debug('API Request', `Signed Headers:`, headersToLog);
 
     const response = await new Promise<{statusCode?: number, body: string}>((resolve, reject) => {
       const req = https.request(options, (res) => {
@@ -126,13 +129,13 @@ export async function apiRequest<T>({
       });
 
       req.on('error', (e) => {
-        console.error(`[API] Network error: ${e.message}`);
+        logger.error('API Network', `Network error: ${e.message}`);
         reject(new Error(`Network error: ${e.message}`));
       });
 
       // Set a timeout to prevent hanging requests
       req.setTimeout(timeout, () => {
-        console.error(`[API] Request timed out after ${timeout}ms: ${method} ${host}${requestPath}`);
+        logger.error('API Timeout', `Request timed out after ${timeout}ms: ${method} ${host}${requestPath}`);
         req.destroy();
         reject(new Error(`Request timed out after ${timeout}ms`));
       });
@@ -145,7 +148,7 @@ export async function apiRequest<T>({
 
     // Check for error status codes
     if (response.statusCode && response.statusCode >= 400) {
-      console.error(`[API] Error response (${response.statusCode}): ${response.body}`);
+      logger.error('API Response', `Error response (${response.statusCode}): ${response.body.substring(0, 500)}...`);
       let errorMessage = `Request failed with status ${response.statusCode}`;
       try {
         const errorData = JSON.parse(response.body);
@@ -163,10 +166,7 @@ export async function apiRequest<T>({
 
     // Parse response
     try {
-      debugLog(`Response status: ${response.statusCode}`);
-      debugLog(`Response body:`, response.body.length > 200 
-        ? response.body.substring(0, 200) + '...' 
-        : response.body);
+      logger.debug('API Response', `<= Status: ${response.statusCode}, Body:`, response.body.length > 200 ? response.body.substring(0, 200) + '...' : response.body);
       
       const data = JSON.parse(response.body) as T;
       return { 
@@ -174,14 +174,16 @@ export async function apiRequest<T>({
         data 
       };
     } catch (parseError) {
-      console.error(`[API] Failed to parse response: ${response.body.substring(0, 200)}`);
+      logger.error('API Response', `Failed to parse JSON: ${response.body.substring(0, 200)}...`);
       throw new Error(`Failed to parse response: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
     }
   } catch(err) {
     // Rethrow with a more specific error message
     if (err instanceof Error) {
+      logger.error('API Request', `Unhandled error: ${err.message}`, err);
       throw err; // Keep original error if it's already well-formed
     }
+    logger.error('API Request', `Unknown error occurred`);
     throw new Error(`API request error: Unknown error`);
   }
 }
@@ -190,16 +192,16 @@ export async function apiRequest<T>({
 // Pseudo code for health check
 export async function checkApiHealth() {
   try {
-    debugLog('Checking API health...');
+    logger.debug('API Health', 'Checking...');
     const result = await apiRequest({
       path: '/health',
       method: 'GET'
     });
     
-    debugLog('API health check result:', result);
+    logger.debug('API Health', 'Check result:', result);
     return result;
   } catch (error) {
-    console.error('[API] Health check failed:', error);
+    logger.error('API Health', 'Check failed:', error);
     throw error;
   }
 }
@@ -257,7 +259,7 @@ export async function listKeys(userId: string) {
     throw new Error('User ID is required to list keys');
   }
   
-  debugLog(`Listing keys for user: ${userId}`);
+  logger.debug('API Keys', `Listing keys for user: ${userId}`);
   return apiRequest<ListKeysResponse>({
     path: '/key',
     method: 'GET',
@@ -270,7 +272,7 @@ export async function createKey(targetUrl: string, userId: string) {
     throw new Error('Target URL is required');
   }
   
-  debugLog(`Creating key for URL: ${targetUrl}`);
+  logger.debug('API Keys', `Creating key for URL: ${targetUrl}, User: ${userId}`);
   return apiRequest<CreateKeyResponse>({
     path: '/key',
     method: 'POST',
@@ -292,7 +294,7 @@ export async function takeScreenshot(
     throw new Error('Both shortPath and URL are required for screenshots');
   }
 
-  debugLog(`Taking screenshot for URL: ${url}, shortPath: ${shortPath}`);
+  logger.debug('Screenshot', `Taking screenshot for URL: ${url}, shortPath: ${shortPath}`);
   
   let lastError: Error | null = null;
   let retryCount = 0;
@@ -300,7 +302,7 @@ export async function takeScreenshot(
   // Try to take screenshot with retries
   while (retryCount <= MAX_RETRIES) {
     try {
-      debugLog(`Attempt ${retryCount + 1}/${MAX_RETRIES + 1} for ${url}`);
+      logger.debug('Screenshot', `Attempt ${retryCount + 1}/${MAX_RETRIES + 1} for ${url}`);
       
       const response = await apiRequest<ScreenshotApiResponse>({
         path: '/screenshots',
@@ -317,7 +319,7 @@ export async function takeScreenshot(
         throw new Error('Screenshot URL not found in response');
       }
 
-      debugLog(`Successfully generated screenshot for ${url}: ${response.data.data.url}`);
+      logger.debug('Screenshot', `Success for ${url}: ${response.data.data.url}`);
       return { s3ObjectUrl: response.data.data.url };
     } catch (error) {
       lastError = error instanceof Error 
@@ -326,20 +328,20 @@ export async function takeScreenshot(
       
       if (lastError.message.includes('504') || lastError.message.includes('timed out')) {
         // This is a timeout error, we can retry
-        console.warn(`[Screenshot] Timeout error, retrying (${retryCount + 1}/${MAX_RETRIES}): ${lastError.message}`);
-        debugLog(`Timeout error details:`, lastError);
+        logger.warn('Screenshot', `Timeout error, retrying (${retryCount + 1}/${MAX_RETRIES}): ${lastError.message}`);
+        logger.debug('Screenshot', `Timeout error details:`, lastError);
         retryCount++;
         
         if (retryCount <= MAX_RETRIES) {
           // Wait before retrying
-          debugLog(`Waiting ${RETRY_DELAY}ms before retry ${retryCount}`);
+          logger.debug('Screenshot', `Waiting ${RETRY_DELAY}ms before retry ${retryCount}`);
           await delay(RETRY_DELAY);
           continue;
         }
       } else {
         // For other errors, don't retry
-        console.error(`[Screenshot] Non-retryable error: ${lastError.message}`);
-        debugLog(`Non-retryable error details:`, lastError);
+        logger.error('Screenshot', `Non-retryable error: ${lastError.message}`);
+        logger.debug('Screenshot', `Non-retryable error details:`, lastError);
         break;
       }
     }
@@ -347,7 +349,7 @@ export async function takeScreenshot(
 
   // If we've exhausted all retries or got a non-retryable error
   const errorMessage = lastError?.message || 'Unknown error';
-  console.error(`[Screenshot] All attempts failed: ${errorMessage}`);
+  logger.error('Screenshot', `All attempts failed: ${errorMessage}`);
   
   // Provide a more detailed error message
   if (errorMessage.includes('504')) {

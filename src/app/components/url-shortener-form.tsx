@@ -11,6 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { takeScreenshot } from '../lib/apiService';
 import ScreenshotPreview from './screenshot-preview';
 import { ShortenedUrlDisplay } from './shortened-url-display';
+import logger from '../lib/logger';
 
 export function UrlShortenerForm() {
   const [shortUrl, setShortUrl] = useState('');
@@ -52,8 +53,19 @@ export function UrlShortenerForm() {
             throw new Error('Failed to generate screenshot: Invalid response from server');
           }
           setScreenshot(response.s3ObjectUrl);
+
+          // Optionally trigger screenshot generation (fire and forget for now)
+          // This seems redundant with the above await, maybe remove or clarify intention?
+          // takeScreenshot(data.shortPath, originalUrl)
+          //   .then(() => {
+          //     logger.debug('Screenshot', 'Screenshot generation initiated for:', data.shortPath);
+          //   })
+          //   .catch(error => {
+          //     logger.error('Screenshot', 'Error initiating screenshot generation:', error);
+          //   });
         } catch (error) {
-          console.error('Screenshot error:', error);
+          // console.error('Screenshot error:', error); // Replace this
+          logger.error('UrlShortenerForm', 'Screenshot error:', error);
           
           // Format user-friendly error message
           let errorMessage = 'Failed to generate screenshot';
@@ -73,7 +85,8 @@ export function UrlShortenerForm() {
         }
       }
     } catch (error) {
-      console.error('URL shortening error:', error);
+      // console.error('URL shortening error:', error); // Replace this
+      logger.error('UrlShortenerForm', 'URL shortening error:', error);
       setError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setScreenshot(null);
       setIsLoading(false);

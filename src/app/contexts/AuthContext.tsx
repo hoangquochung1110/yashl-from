@@ -9,7 +9,7 @@ import {
   signOut as firebaseSignOut
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { useRouter } from 'next/navigation';
+import logger from '../lib/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -23,7 +23,6 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -35,21 +34,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async () => {
+    setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      router.push('/manage');
+      // User state will be updated by onAuthStateChanged
     } catch (error) {
-      console.error('Error signing in:', error);
+      logger.error('AuthContext', 'Error signing in:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
+    setLoading(true);
     try {
       await firebaseSignOut(auth);
-      router.push('/');
+      // User state will be updated by onAuthStateChanged
     } catch (error) {
-      console.error('Error signing out:', error);
+      logger.error('AuthContext', 'Error signing out:', error);
+    } finally {
+      setLoading(false);
     }
   };
 

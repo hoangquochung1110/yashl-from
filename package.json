@@ -12,6 +12,7 @@
     "@aws-sdk/client-sts": "^3.709.0",
     "@radix-ui/react-label": "^2.1.0",
     "aws4": "^1.13.2",
+    "chalk": "^5.4.1",
     "class-variance-authority": "^0.7.0",
     "fetch-node": "^0.0.1",
     "firebase": "^9.23.0",
