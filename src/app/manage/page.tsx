@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import ProtectedRoute from '../components/ProtectedRoute';
-import listKeys from '../lib/listKeys';
-
+import { listKeys } from '../lib/apiService';
+import { useAuth } from '../contexts/AuthContext';
+import { useEffect, useState } from 'react';
 
 interface UrlEntry {
   shortUrl: string;
@@ -11,116 +12,118 @@ interface UrlEntry {
   clickCount: number;
 }
 
-// This is mock data - you'll want to replace this with actual data from your backend
-import { useEffect, useState } from 'react';
-import { auth } from '../lib/firebase';
-import { User, onAuthStateChanged } from 'firebase/auth';
-
-
 export default function ManageUrls() {
-  const [user, setUser] = useState<User | null>(null);
-
-  const [urls, setUrls] = useState<null | UrlEntry[]>(null);
+  const { user } = useAuth();
+  const [urls, setUrls] = useState<UrlEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-        console.log("User is signed in:", user.uid);
-      } else {
-        setUser(null);
-        console.log("User is signed out");
-      }
-    });
-
-    return () => unsubscribe(); // Cleanup subscription on unmount
-  }, []);
-
-  useEffect(() => {
     const fetchUrls = async () => {
+      if (!user?.uid) return;
+      
       try {
-        const response = await listKeys(user?.uid as string);
-        const data = JSON.parse(response.body);
-        const urls: UrlEntry[] = data.map((item: { key_id: string, user_id: string, shorten_path: string, destination_url: string, click_count: string }) => ({
-          shortUrl: `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${item.shorten_path}`,
-          destinationUrl: item.destination_url,
-          clickCount: parseInt(item.click_count, 10),
-        }));
-          setUrls(urls);
+        const response = await listKeys(user.uid);
+        const data = response.data;
+        
+        // Check if data.keys exists and is an array before mapping
+        if (!data || !data.keys || !Array.isArray(data.keys)) {
+          console.error('Unexpected API response format:', data);
+          setUrls([]);
           setLoading(false);
+          return;
+        }
+        
+        const urls: UrlEntry[] = data.keys.map((item: { key_id: string, user_id: string, short_path: string, target_url: string, hits: string }) => ({
+          shortUrl: `${process.env.NEXT_PUBLIC_CLIENT_DOMAIN}/${item.short_path}`,  // TODO: server should return shortUrl
+          destinationUrl: item.target_url,
+          clickCount: parseInt(item.hits, 10),
+        }));
+        setUrls(urls);
       } catch (error) {
         console.error('Error fetching URLs:', error);
+        setUrls([]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (user?.uid) {
-      fetchUrls();
-    }
+    fetchUrls();
   }, [user?.uid]);
 
   return (
     <ProtectedRoute>
-         <main className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Manage Shortened URLs</h1>
-          <Link 
-            href="/" 
-            className="text-blue-600 hover:text-blue-800 underline"
-          >
-            Back to Home
-          </Link>
-        </div>
+      <main className="min-h-screen bg-gray-100 p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">Manage Shortened URLs</h1>
+            <Link 
+              href="/" 
+              className="text-blue-600 hover:text-blue-800 underline"
+            >
+              Back to Home
+            </Link>
+          </div>
 
-        <div className="rounded-lg overflow-hidden">
-          {loading ? (
-            <svg className="animate-spin h-10 w-10 text-blue-600" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-              <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-            </svg>
-          ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Shortened URL
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Destination URL
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Click Count
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {urls?.map((url, index) => (
-                  <tr key={index}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <a 
-                        href={`${url.shortUrl}`}
-                        className="text-blue-600 hover:text-blue-800"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {url.shortUrl}
-                      </a>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap truncate max-w-xs">
-                      {url.destinationUrl}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {url.clickCount}
-                    </td>
+          <div className="rounded-lg overflow-hidden">
+            {loading ? (
+              <div className="flex justify-center py-10">
+                <svg className="animate-spin h-10 w-10 text-blue-600" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                </svg>
+              </div>
+            ) : urls.length === 0 ? (
+              <div className="bg-white p-8 text-center">
+                <p className="text-gray-500">You don&apos;t have any shortened URLs yet.</p>
+                <Link 
+                  href="/" 
+                  className="mt-4 inline-block bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-800"
+                >
+                  Create a Shortened URL
+                </Link>
+              </div>
+            ) : (
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Shortened URL
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Destination URL
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Click Count
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {urls.map((url, index) => (
+                    <tr key={index}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <a 
+                          href={`${url.shortUrl}`}
+                          className="text-blue-600 hover:text-blue-800"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {url.shortUrl}
+                        </a>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap truncate max-w-xs">
+                        {url.destinationUrl}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {url.clickCount}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
     </ProtectedRoute>
   );
 } 
