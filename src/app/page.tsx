@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { auth } from './lib/firebase';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import logger from './lib/logger';
+import HorizontalUrlShortener from '@/components/HorizontalUrlShortener';
 
 
 export default function Home() {
@@ -25,17 +26,18 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-      <UrlShortenerForm />
-      <Link 
-        href="/manage" 
-        className="mt-4 text-blue-600 hover:text-blue-800 underline"
-      >
-        Manage URLs
-      </Link>
-      <div className="absolute top-0 right-0 p-4">
+    <main className="relative min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center p-4 overflow-hidden">
+      <div className="absolute inset-0 z-0 opacity-40">
+        <HorizontalUrlShortener />
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center justify-center">
+        <UrlShortenerForm />
+      </div>
+
+      <div className="absolute top-0 right-0 p-4 z-10">
         {user ? ( 
-          <p>Hi {user.displayName}</p>
+          <p className="text-gray-800 dark:text-gray-200">Hi {user.displayName}</p>
         ) : (
           <Link
             href="/login"
@@ -45,7 +47,6 @@ export default function Home() {
           </Link>
         )}
       </div>
-
     </main>
   )
 }

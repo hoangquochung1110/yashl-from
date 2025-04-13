@@ -12,6 +12,7 @@ import { takeScreenshot } from '../lib/apiService';
 import ScreenshotPreview from './screenshot-preview';
 import { ShortenedUrlDisplay } from './shortened-url-display';
 import logger from '../lib/logger';
+import Link from 'next/link';
 
 export function UrlShortenerForm() {
   const [shortUrl, setShortUrl] = useState('');
@@ -94,7 +95,7 @@ export function UrlShortenerForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md bg-white/80 dark:bg-black/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 shadow-lg">
       <CardHeader>
         <CardTitle>URL Shortener</CardTitle>
         <CardDescription>Enter a long URL to get a shortened version</CardDescription>
@@ -123,21 +124,29 @@ export function UrlShortenerForm() {
             {isLoading ? 'Shortening...' : isScreenshotLoading ? 'Generating Preview...' : 'Shorten URL'}
           </Button>
         </form>
-        {error && <p className="text-red-500 mt-4">{error}</p>}
+        {error && <p className="text-red-500 mt-4 text-center text-sm">{error}</p>}
         {shortUrl && <ShortenedUrlDisplay url={shortUrl} />}
         {(isLoading || isScreenshotLoading) ? (
-          <div className="flex flex-col justify-center items-center p-4">
+          <div className="flex flex-col justify-center items-center p-4 mt-4">
             <svg className="animate-spin h-10 w-10 text-blue-600 mb-2" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
             </svg>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {isLoading ? 'Shortening URL...' : 'Generating screenshot preview...'}
             </p>
           </div>
         ) : screenshot && (
           <ScreenshotPreview imageUrl={screenshot} />
         )}
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
+          <Link 
+            href="/manage" 
+            className="text-sm text-blue-600 hover:text-blue-800 underline dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            Manage Your Shortened URLs
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );

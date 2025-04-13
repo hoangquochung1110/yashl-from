@@ -19,3 +19,30 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* --- Horizontal Scroller Animations --- */
+.animate-scroll,
+.animate-scroll-reverse {
+  display: flex; /* Ensure flex display */
+  width: fit-content; 
+}
+.animate-scroll {
+  /* Duration: 150s */
+  animation: scroll 150s linear infinite;
+}
+.animate-scroll-reverse {
+  /* Duration: 150s */
+  animation: scroll-reverse 150s linear infinite;
+}
+
+@keyframes scroll {
+  from { transform: translateX(0px); }
+  /* Translate by -5760px (20 items * 288px width+margin) */
+  to { transform: translateX(-5760px); } 
+}
+@keyframes scroll-reverse {
+  /* Translate from -5760px */
+  from { transform: translateX(-5760px); } 
+  to { transform: translateX(0px); }
+}
+/* --- End Horizontal Scroller Animations --- */
