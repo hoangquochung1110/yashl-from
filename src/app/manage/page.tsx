@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import ProtectedRoute from '../components/ProtectedRoute';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import { listKeys } from '../lib/apiService';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useState } from 'react';

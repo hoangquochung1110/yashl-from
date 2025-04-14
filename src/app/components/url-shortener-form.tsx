@@ -1,18 +1,18 @@
 'use client'
 
-import React, { useState } from 'react';
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Checkbox } from "./ui/checkbox";
 import shortenUrl from '@/app/lib/generateKey';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Link from 'next/link';
+import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { takeScreenshot } from '../lib/apiService';
+import logger from '../lib/logger';
 import ScreenshotPreview from './screenshot-preview';
 import { ShortenedUrlDisplay } from './shortened-url-display';
-import logger from '../lib/logger';
-import Link from 'next/link';
 
 export function UrlShortenerForm() {
   const [shortUrl, setShortUrl] = useState('');

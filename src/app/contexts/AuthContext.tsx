@@ -1,13 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { 
-  User,
+import {
+  signOut as firebaseSignOut,
   GoogleAuthProvider,
-  signInWithPopup,
   onAuthStateChanged,
-  signOut as firebaseSignOut
+  signInWithPopup,
+  User
 } from 'firebase/auth';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth } from '../lib/firebase';
 import logger from '../lib/logger';
 
