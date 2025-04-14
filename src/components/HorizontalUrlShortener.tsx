@@ -88,13 +88,8 @@ interface UrlData {
   short: string;
 }
 
-// Calculate item width + margin (w-64 -> 256px, mx-4 -> 1rem -> 16px * 2 = 32px)
-const ITEM_WIDTH_PX = 256 + 32;
 // Increase number of active items
 const NUM_ACTIVE_ITEMS = 20; 
-const ANIMATION_TRANSLATE_X = NUM_ACTIVE_ITEMS * ITEM_WIDTH_PX;
-// Increase duration for slower speed
-const ANIMATION_DURATION_S = 150; 
 
 const HorizontalUrlShortener: React.FC = () => { 
   const [activeUrls, setActiveUrls] = useState<UrlData[]>([]); 
